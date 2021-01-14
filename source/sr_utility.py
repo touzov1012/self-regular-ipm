@@ -41,21 +41,24 @@ def Phip(v, p, q):
     
     return np.array([Yp(t,p,q) for t in v])
 
-def LineSearchMin(F, x_0, d, L, U, eps):
+def LineSearchXS(F, x, s, dx, ds, L, U, iterates):
     """
     Line search minimum value of alpha for F(x0 + d * alpha)
     """
     
-    if abs(U - L) < eps:
-        return (U + L) / 2
+    L_val = F(x + dx * L, s + ds * L)
+    U_val = F(x + dx * U, s + ds * U)
     
-    L_val = F(x_0 + (3/4 * L + 1/4 * U) * d)
-    U_val = F(x_0 + (1/4 * L + 3/4 * U) * d)
-    
+    if iterates <= 0:
+        if L_val < U_val:
+            return L
+        else:
+            return U
+        
     
     if L_val < U_val:
-        return LineSearchMin(F, x_0, d, L, 1/4 * L + 3/4 * U, eps)
+        return LineSearchXS(F, x, s, dx, ds, L, (U + L) / 2, iterates - 1)
     else:
-    	return LineSearchMin(F, x_0, d, 3/4 * L + 1/4 * U, U, eps)
+    	return LineSearchXS(F, x, s, dx, ds, (U + L) / 2, U, iterates - 1)
 
     

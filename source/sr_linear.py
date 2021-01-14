@@ -113,9 +113,13 @@ def PDSolve(A, b, c, tau, eps, theta, p, q):
         while Phi(np.sqrt(x * s / mu), p, q) >= tau:
             [dy, dx, ds, alpha] = FindSearchDirection(nA, nb, x, s, mu, p, q)
             
-            y += alpha * dy
-            x += alpha * dx
-            s += alpha * ds
+            ls_alpha = LineSearchXS(lambda u,w: Phi(np.sqrt(u.clip(min=0) * w.clip(min=0) / mu), p, q), x, s, dx, ds, alpha, 2, 10)
+            
+            # print(str(ls_alpha) + " " + str(alpha))
+            
+            y += ls_alpha * dy
+            x += ls_alpha * dx
+            s += ls_alpha * ds
             
     if x[-2] > s[-2] and x[-2] > eps:
         """
