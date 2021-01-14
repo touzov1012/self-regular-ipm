@@ -5,38 +5,8 @@ Created on Sun Jan 10 11:53:55 2021
 @author: alex
 """
 
+from sr_utility import *
 import numpy as np
-    
-def Y(t, p, q):
-    """
-    Self-regular proximity function class kernel p,q >= 1
-    """
-    
-    if q == 1:
-        return (t**(p+1) - 1) / (p * (p+1)) - np.log(t) / q + (p - 1) / p * (t-1)
-    else:
-        return (t**(p+1) - 1) / (p * (p+1)) + (t**(1-q) - 1) / (q*(q-1)) + (p - q) / (p * q) * (t-1)
-
-def Yp(t, p, q):
-    """
-    Self-regular proximity gradient kernel p,q >= 1
-    """
-    
-    return (t**p - 1) / p + (1-t**(-q)) / q
-
-def Phi(v, p, q):
-    """
-    Self-regular proximity for solution v = sqrt(xs/mu) using Y(p,q) kernel
-    """
-    
-    return np.sum([Y(t,p,q) for t in v])
-
-def Phip(v, p, q):
-    """
-    Self-regular proximity gradient
-    """
-    
-    return np.array([Yp(t,p,q) for t in v])
 
 
 def SelfDualNewtonSystem(A, b, c):
@@ -103,16 +73,18 @@ def FindSearchDirection(nA, nb, x, s, mu, p, q):
     np.fill_diagonal(nA[-n:,m:(m+n)], s)
     np.fill_diagonal(nA[-n:,(m+n):], x)
     
-    grad = Phip(np.sqrt(x * s / mu), p, q)
+    v = np.sqrt(x * s / mu)
+    
+    grad = Phip(v, p, q)
     
     nb[0:] = 0
     nb[-n:] = -np.sqrt(mu * s * x) * grad
     
-    v = np.linalg.solve(nA, nb)
+    sol = np.linalg.solve(nA, nb)
     
-    dy = v[0:m]
-    dx = v[m:(m+n)]
-    ds = v[(m+n):]
+    dy = sol[0:m]
+    dx = sol[m:(m+n)]
+    ds = sol[(m+n):]
     
     alpha = min(1/(3*p+1),1/(6*q+4)) * np.linalg.norm(grad) ** (-(q+1)/q)
     
