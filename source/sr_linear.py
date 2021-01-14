@@ -91,9 +91,15 @@ def FindSearchDirection(nA, nb, x, s, mu, p, q):
     return [dy, dx, ds, alpha]
     
     
-def PDSolve(A, b, c, tau, eps, theta, p, q):
+def PDSolve(A, b, c, tau, eps, theta, p, q, search_steps):
     """
     Solve a LP using self-regular proximities in IPM
+    Data: (A, b, c)
+    tau: proximity ball size, update central path target after entering
+    eps: target duality gap
+    theta: central path shrink coefficient, how much do we shift mu each update
+    p, q: proximity function parameters
+    search_steps: number of line search iterations
     """
     
     nA = SelfDualNewtonSystem(A, b, c)
@@ -107,20 +113,22 @@ def PDSolve(A, b, c, tau, eps, theta, p, q):
     s = np.ones(n)
     mu = 1
     
+    
     while n * mu >= eps:
         mu = (1 - theta) * mu
         
         while Phi(np.sqrt(x * s / mu), p, q) >= tau:
             [dy, dx, ds, alpha] = FindSearchDirection(nA, nb, x, s, mu, p, q)
             
-            ls_alpha = LineSearchXS(lambda u,w: Phi(np.sqrt(u.clip(min=0) * w.clip(min=0) / mu), p, q), x, s, dx, ds, alpha, 2, 10)
+            ls_alpha = LineSearchXS(lambda u,w: Phi(np.sqrt(u.clip(min=0) * w.clip(min=0) / mu), p, q), x, s, dx, ds, alpha, 2, search_steps)
             
-            # print(str(ls_alpha) + " " + str(alpha))
+            #print(str(ls_alpha) + " " + str(alpha))
             
             y += ls_alpha * dy
             x += ls_alpha * dx
             s += ls_alpha * ds
-            
+    
+    
     if x[-2] > s[-2] and x[-2] > eps:
         """
         P optimal
@@ -140,6 +148,28 @@ def PDSolve(A, b, c, tau, eps, theta, p, q):
         """
         print("Unknown, check conditioning")
         return None
+    
+    
+    
+def TestLP():
+    """
+    Generate a test LP problem in standard form
+    opt: 6450
+    x = (700, 700, 50)
+    """
+    
+    A = np.array([[0.4, 0.30, 0.2, -1,  0,  0, 0, 0, 0],
+                  [0.4, 0.35, 0.2,  0, -1,  0, 0, 0, 0],
+                  [0.2, 0.35, 0.6,  0,  0, -1, 0, 0, 0],
+                  [  1,    0,   0,  0,  0,  0, 1, 0, 0],
+                  [  0,    1,   0,  0,  0,  0, 0, 1, 0],
+                  [  0,    0,   1,  0,  0,  0, 0, 0, 1]])
+    
+    b = np.array([500, 300, 300, 700, 700, 700])
+    
+    c = np.array([5, 4, 3, 0, 0, 0, 0, 0, 0])
+    
+    return [A, b, c]
     
     
     
