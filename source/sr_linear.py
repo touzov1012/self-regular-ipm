@@ -7,53 +7,6 @@ Created on Sun Jan 10 11:53:55 2021
 
 from sr_utility import *
 import numpy as np
-
-
-def SelfDualNewtonSystem(A, b, c):
-    """
-    Create the self dual embedding with a known interior point for the problem
-    
-    min cx
-        Ax = b
-        x >= 0
-        
-    The embedding will be of the form
-    
-    min -c*x
-        A*x* = 0
-    -A*'y + Cx* - S = c*
-    x,S >= 0
-    
-    with known solution x=S=1, y=0
-    
-    The returned quantity is the right hand side of the linear system
-    solved during a newton step, that is the optimality conditions
-    xs = mu are appended in linearized form
-    """
-    
-    n = A.shape[1]
-    m = A.shape[0]
-    e = np.ones(n, dtype = int)
-    
-    b_bar = b - np.matmul(A,e)
-    c_bar = c - e
-    alpha = 1 + np.dot(c, e)
-    beta = n + 2
-    
-    A_star = np.c_[A,-b,b_bar]
-    C = np.zeros((n+2,n+2))
-    C[0:n,n] = c
-    C[n,0:n] = -C[0:n,n].T
-    C[0:n,n+1] = -c_bar
-    C[n+1,0:n] = -C[0:n,n+1].T
-    C[n,n+1] = alpha
-    C[n+1,n] = -C[n,n+1].T
-    
-    yA = np.r_[np.zeros((m,m)), -A_star.T, np.zeros((n+2, m))]
-    xA = np.r_[A_star, C, np.eye(n+2)]
-    sA = np.r_[np.zeros((m, n+2)), -np.eye(n+2), np.eye(n+2)]
-    
-    return np.c_[yA, xA, sA]
     
 
 def FindSearchDirection(nA, nb, x, s, mu, p, q):
@@ -102,7 +55,7 @@ def PDSolve(A, b, c, tau, eps, theta, p, q, search_steps):
     search_steps: number of line search iterations
     """
     
-    nA = SelfDualNewtonSystem(A, b, c)
+    nA = SelfDualNewtonSystem(A, b, c, np.ones(A.shape[1]))
     nb = np.zeros(nA.shape[0])
     
     m = A.shape[0]
