@@ -185,3 +185,35 @@ def PDSolve(A, b, c, tau, eps, theta, p, q, search_steps):
         """
         print("SDP Pathology")
         return None
+    
+
+def TestSDP():
+    """
+    Generate a test LP problem in standard form
+    opt: 2.0377
+    """
+    
+    A = np.array([
+            [[1, 0, 0],
+             [0, 0, 0],
+             [0, 0, 0]],
+             
+            [[0, 1, 0],
+             [1, 0, 0],
+             [0, 0, 0]],
+             
+            [[0, 0, 1],
+             [0, 1, 0],
+             [1, 0, 0]],
+             
+            [[0, 0, 0],
+             [0, 0, 1],
+             [0, 1, 0]]], dtype = float)
+    
+    b = np.array([1, 1, -2, -2], dtype = float)
+    
+    c = np.array([[0, 0, 0],
+                  [0, 0, 0],
+                  [0, 0, 1]], dtype = float)
+    
+    return [A, b, c]
